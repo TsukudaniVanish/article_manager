@@ -9,9 +9,9 @@ version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/articleExplore#readme>
 homepage:       https://github.com/githubuser/articleExplore#readme
 bug-reports:    https://github.com/githubuser/articleExplore/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2022 Author name here
+author:         TsukudaniVanish
+maintainer:     tsukudani710@gmain.com
+copyright:      2022 TsukudaniVanish
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -25,13 +25,16 @@ source-repository head
 
 library
   exposed-modules:
+      IOfunctions
       Lib
+      SrcTest
   other-modules:
       Paths_articleExplore
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , hashmap
   default-language: Haskell2010
 
 executable articleExplore-exe
@@ -44,6 +47,7 @@ executable articleExplore-exe
   build-depends:
       articleExplore
     , base >=4.7 && <5
+    , hashmap
   default-language: Haskell2010
 
 test-suite articleExplore-test
@@ -57,4 +61,5 @@ test-suite articleExplore-test
   build-depends:
       articleExplore
     , base >=4.7 && <5
+    , hashmap
   default-language: Haskell2010

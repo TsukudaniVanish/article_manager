@@ -1,6 +1,7 @@
 module Main where
 
-import Lib
+import IOfunctions (interfaceInit)
 
 main :: IO ()
-main = someFunc
+main = interfaceInit
+
