@@ -16,7 +16,10 @@ testTemp :: String -> Bool -> IO ()
 testTemp test  p= if p then putStrLn $ showInGreen $ test ++ " passed!" else error $ test ++ " failed"
 
 testAll :: IO ()
-testAll = testParseCommand
+testAll = do testParseCommand
+             testGetLine
+             testSplitBy
+             testDropLine
 
 testParseCommand = do let testName = "parseCommand"
                           no = (testName ++) .show 
@@ -27,3 +30,9 @@ testParseCommand = do let testName = "parseCommand"
                       test 1 first
                       test 2 second
                       test 3 third
+
+testGetLine = testTemp "getLn" (getLn "abc\nthisisfail" == "abc" && getLn "abs" == "abs") 
+
+testSplitBy = testTemp "splitBy" (splitBy "a b c" ' ' == ["a", "b", "c"])
+
+testDropLine = testTemp "dropLine" (dropLine "fail\nOk" == "Ok" && dropLine "\nOk" == "Ok")

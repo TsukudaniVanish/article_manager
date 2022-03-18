@@ -33,6 +33,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , directory
     , hashmap
   default-language: Haskell2010
 
@@ -46,6 +47,7 @@ executable articleExplore-exe
   build-depends:
       articleExplore
     , base >=4.7 && <5
+    , directory
     , hashmap
   default-language: Haskell2010
 
@@ -60,5 +62,6 @@ test-suite articleExplore-test
   build-depends:
       articleExplore
     , base >=4.7 && <5
+    , directory
     , hashmap
   default-language: Haskell2010

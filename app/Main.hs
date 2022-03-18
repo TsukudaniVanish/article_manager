@@ -1,23 +1,36 @@
 module Main where
 
-import Lib
+import qualified Lib
 import Data.Maybe
+import System.Directory
+
+containerFileName :: String 
+containerFileName = "data.txt"
+
+containerFilePath :: String -> String 
+containerFilePath dir = dir ++ "/" ++ containerFileName
 
 main = interfaceInit
 
 interfaceInit :: IO ()
 interfaceInit = do putStrLn "Hello!"
-                   b <- initDatabase
-                   interface Init b
+                   cur <- getCurrentDirectory 
+                   success <- doesFileExist $ containerFilePath cur
+                   if success then
+                    do file <- readFile $ containerFilePath cur 
+                       b <- initDatabase file
+                       interface Lib.Init b  
+                   else 
+                       interface Lib.Init Lib.emptyDatabase
 
-interface :: UImode -> Database -> IO ()
-interface Init b = do putStrLn "If you need help type 'help'"
-                      interface Command b
-interface Command b = interactWithUser b
-interface Quit b = do putStrLn "Bye"
-                      return ()
+interface :: Lib.UImode -> Lib.Database -> IO ()
+interface Lib.Init b = do putStrLn "If you need help type 'help'"
+                          interface Lib.Command b
+interface Lib.Command b = interactWithUser b
+interface Lib.Quit b = do putStrLn "Bye"
+                          return ()
 
-interactWithUser :: Database -> IO ()
+interactWithUser :: Lib.Database -> IO ()
 
 interactWithUser b = do mc <- registerCommand
                         if isNothing mc  then
@@ -32,18 +45,23 @@ interactWithUser b = do mc <- registerCommand
                                     putStrLn "If you need help type 'help'"
                                     interface state b
 
-registerCommand :: IO (Maybe ValidCommand)
-registerCommand = parseCommand <$> getLine
+registerCommand :: IO (Maybe Lib.ValidCommand)
+registerCommand = Lib.parseCommand <$> getLine
 
-doCommand :: Maybe ValidCommand -> Database -> IO (Bool, UImode, Database)
-doCommand Nothing b = return (False, Command ,b)
+doCommand :: Maybe Lib.ValidCommand -> Lib.Database -> IO (Bool, Lib.UImode, Lib.Database)
+doCommand Nothing b = return (False, Lib.Command ,b)
 doCommand (Just x) b = executeCommand x b
 
-executeCommand :: ValidCommand -> Database -> IO (Bool, UImode,Database)
-executeCommand (Add name articlePath readmePath tags) b = do let articleData = mkData articlePath readmePath tags
-                                                             database <- addDatabase name articleData b
-                                                             return (True, Command, database)
-executeCommand Display b = do putStr $ displayDatabase b
-                              return (True, Command, b)
-executeCommand Close b =  return (True, Quit, b)
-executeCommand (Delete name) b = return (False, Command, b) -- TODO
+executeCommand :: Lib.ValidCommand -> Lib.Database -> IO (Bool, Lib.UImode, Lib.Database)
+executeCommand (Lib.Add name articlePath readmePath tags) b = do let articleData = Lib.mkData articlePath readmePath tags
+                                                                     database =  Lib.addDatabase name articleData b
+                                                                 return (True, Lib.Command, database)
+executeCommand Lib.Display b = do putStr $ Lib.displayDatabase b
+                                  return (True, Lib.Command, b)
+executeCommand Lib.Close b =  return (True, Lib.Quit, b)
+executeCommand (Lib.Delete name) b = return (False, Lib.Command, b) -- TODO
+
+
+initDatabase :: String -> IO Lib.Database
+initDatabase file| null file = return Lib.emptyDatabase
+                 | otherwise = return $ Lib.parseContainerFile file 
