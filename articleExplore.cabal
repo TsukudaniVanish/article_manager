@@ -25,7 +25,6 @@ source-repository head
 
 library
   exposed-modules:
-      IOfunctions
       Lib
       SrcTest
   other-modules:

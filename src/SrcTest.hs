@@ -1,7 +1,6 @@
 module SrcTest where
 
 import Lib
-import IOfunctions
 
 import Data.Maybe 
 

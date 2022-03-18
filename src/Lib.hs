@@ -38,12 +38,16 @@ readDelete operands | null operands = Nothing
 
 
 type FPath = String
-type ArticleData = (FPath, FPath, [String])
+data ArticleData = Ad {
+    filePath:: String,
+    readmePath :: String,
+    tags :: [String]
+}
 emptyData :: ArticleData
-emptyData = ([], [], [])
+emptyData = Ad { filePath= [], readmePath = [], tags = []}
 
 mkData :: FPath  -> FPath  -> [String] -> ArticleData
-mkData a r tags = (a, r, tags)
+mkData a r tags = Ad{filePath = a, readmePath = r, tags = tags}
 
 type Database = Map.Map String ArticleData
 
@@ -57,7 +61,7 @@ getFromDatabase :: String -> Database -> IO ArticleData
 getFromDatabase key base = return $ Map.findWithDefault emptyData key base
 
 showArticleData :: ArticleData -> String
-showArticleData (a, r, tags) = "filePath: " ++ a ++ "\n" ++ "readme path: " ++ r ++ "\n" ++ "tags: " ++ concatMap (++ " ") tags
+showArticleData ad = "filePath: " ++ filePath ad ++ "\n" ++ "readme path: " ++ readmePath ad ++ "\n" ++ "tags: " ++ concatMap (++ " ") (tags ad)
 
 displayData :: String -> ArticleData -> String
 displayData key articleData = "article: " ++ key ++ "\n" ++ showArticleData articleData
