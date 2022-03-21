@@ -1,4 +1,5 @@
 {-#LANGUAGE MultiWayIf #-}
+{-#LANGUAGE BlockArguments #-}
 module Lib where
 
 import qualified Data.HashMap as Map
@@ -62,6 +63,9 @@ emptyDatabase = Map.empty
 addDatabase :: String -> ArticleData -> Database -> Database
 addDatabase  = Map.insert
 
+deleteDatabase :: String -> Database -> Database
+deleteDatabase = Map.delete  
+
 getFromDatabase :: String -> Database -> ArticleData
 getFromDatabase  = Map.findWithDefault emptyData 
 
@@ -99,7 +103,8 @@ splitBy s _c =
     in if null containsChar then [line] else  line : tail containsChar `splitBy` _c
 
 dropLine :: String -> String 
-dropLine s = 
+dropLine s| null s = []
+          | otherwise = 
     let (line, restWithNewLChar) = chopStringAtFirst newLineChar s
     in tail restWithNewLChar
          
@@ -112,6 +117,20 @@ parseOneLine :: String -> Database -> Database
 parseOneLine line base = 
     let tokens = line `splitBy` containerFileSplitter
         [name, filepath, readmepath] = take 3 tokens 
-        tags = drop 3 tokens
+        tags = filter (not . null) $ drop 3 tokens
         ad = Ad {filePath = filepath, readmePath = readmepath, tags = tags}
     in addDatabase name ad base
+
+databaseToFileContent :: Database -> String 
+databaseToFileContent b = 
+    let contents = Map.toList b 
+    in readAndWriteOneLines contents
+        
+
+dataToOneLine :: (String, ArticleData) -> String 
+dataToOneLine (name, articleData) = concatMap (++ ",") $ [name, filePath articleData, readmePath articleData] ++ tags articleData 
+
+readAndWriteOneLines :: [(String, ArticleData)] ->  String 
+readAndWriteOneLines contents = unlines $ foldr helper [] contents
+    where 
+        helper content contents = dataToOneLine content : contents 

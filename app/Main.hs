@@ -3,6 +3,7 @@ module Main where
 import qualified Lib
 import Data.Maybe
 import System.Directory
+import Control.Monad 
 
 containerFileName :: String 
 containerFileName = "data.txt"
@@ -27,8 +28,14 @@ interface :: Lib.UImode -> Lib.Database -> IO ()
 interface Lib.Init b = do putStrLn "If you need help type 'help'"
                           interface Lib.Command b
 interface Lib.Command b = interactWithUser b
-interface Lib.Quit b = do putStrLn "Bye"
-                          return ()
+interface Lib.Quit b = do 
+    unless (null b) $ do
+        putStrLn "saving current database"
+        cur <- getCurrentDirectory 
+        let filePath = cur ++ "/" ++ containerFileName
+        writeFile filePath $ Lib.databaseToFileContent b
+    putStrLn "Bye"
+    return ()
 
 interactWithUser :: Lib.Database -> IO ()
 
@@ -59,7 +66,9 @@ executeCommand (Lib.Add name articlePath readmePath tags) b = do let articleData
 executeCommand Lib.Display b = do putStr $ Lib.displayDatabase b
                                   return (True, Lib.Command, b)
 executeCommand Lib.Close b =  return (True, Lib.Quit, b)
-executeCommand (Lib.Delete name) b = return (False, Lib.Command, b) -- TODO
+executeCommand (Lib.Delete name) b = do
+    let database = Lib.deleteDatabase name b
+    return (True, Lib.Command, database)
 
 
 initDatabase :: String -> IO Lib.Database
