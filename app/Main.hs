@@ -1,9 +1,13 @@
+{-#LANGUAGE BlockArguments #-}
 module Main where
 
 import qualified Lib
 import Data.Maybe
 import System.Directory
 import Control.Monad 
+import Data.Function 
+
+import System.Process 
 
 containerFileName :: String 
 containerFileName = "data.txt"
@@ -25,9 +29,12 @@ interfaceInit = do putStrLn "Hello!"
                        interface Lib.Init Lib.emptyDatabase
 
 interface :: Lib.UImode -> Lib.Database -> IO ()
-interface Lib.Init b = do putStrLn "If you need help type 'help'"
-                          interface Lib.Command b
-interface Lib.Command b = interactWithUser b
+interface Lib.Init b = do interface Lib.Command b
+
+interface Lib.Command b = do 
+    putStrLn "type Command below!(If you need help type 'help')"
+    interactWithUser b
+
 interface Lib.Quit b = do 
     unless (null b) $ do
         putStrLn "saving current database"
@@ -63,13 +70,46 @@ executeCommand :: Lib.ValidCommand -> Lib.Database -> IO (Bool, Lib.UImode, Lib.
 executeCommand (Lib.Add name articlePath readmePath tags) b = do let articleData = Lib.mkData articlePath readmePath tags
                                                                      database =  Lib.addDatabase name articleData b
                                                                  return (True, Lib.Command, database)
+
 executeCommand Lib.Display b = do putStr $ Lib.displayDatabase b
                                   return (True, Lib.Command, b)
+
 executeCommand Lib.Close b =  return (True, Lib.Quit, b)
+
 executeCommand (Lib.Delete name) b = do
     let database = Lib.deleteDatabase name b
     return (True, Lib.Command, database)
 
+executeCommand (Lib.RdDir path) b = do 
+    contents <- getDirectoryContents path
+    putStr  "if you need path then put bellow(tags are added to each read articles)\n"
+    tags <- words <$> getLine 
+    let eggOfAds= flip map contents \name ->
+            let 
+                article = path ++ "/" ++ name ++ "/article.pdf"
+                readme = path ++ "/" ++ name ++ "/readme.md"
+            in
+                (name, article, readme)
+        database = flip fix (b, eggOfAds) \loop (b', eggs) ->
+            if null eggs then 
+                b' 
+            else 
+                let
+                    (name, article, readme) = head eggs 
+                    eggs' = tail eggs
+                    ad = Lib.mkData article readme tags
+                    b = Lib.addDatabase name ad b' 
+                in  loop (b, eggs')
+    
+    return (True, Lib.Command, database)
+
+executeCommand (Lib.Edit name) b = do
+    let ad = Lib.getFromDatabase name b
+        readme = Lib.readmePath ad
+    (_, _, _, ph) <- createProcess (proc "/usr/bin/nvim" [readme])
+    exit <- waitForProcess ph
+    putStrLn "edit finish!"
+    return (True, Lib.Command, b)
 
 initDatabase :: String -> IO Lib.Database
 initDatabase file| null file = return Lib.emptyDatabase

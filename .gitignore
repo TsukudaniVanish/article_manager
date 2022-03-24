@@ -2,5 +2,6 @@
 .ideas/
 .vscode/
 dist-newstyle/
+testForApp/
 *.txt
 *~

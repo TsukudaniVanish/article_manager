@@ -7,16 +7,18 @@ import qualified Data.HashMap as Map
 import Data.Maybe
 
 data UImode = Init | Command | Quit
-data ValidCommand = Add String FilePath FilePath [String] | Delete String | Display | Close
+data ValidCommand = Add String FilePath FilePath [String] | Delete String | Display | Close | RdDir String | Edit String
     deriving (Eq, Show,Read)
 
--- containerfile format = (line ++ [NewLineChar])*
+-- containerFile format = (line ++ [NewLineChar])*
 -- line = name++ containerFileSplitter ++ filePath++ containerFileSplitter ++ readmePath++ containerFileSplitter ++ tags
 -- tags = ident(++ containerFileSplitter ++ ident)*
 
 containerFileSplitter :: Char
 containerFileSplitter = ',' 
 
+
+-- if you want to add command change here 
 parseCommand :: String -> Maybe ValidCommand
 parseCommand s = let tokens = words s in 
     if null tokens then 
@@ -28,6 +30,8 @@ parseCommand s = let tokens = words s in
                   | instruction == "delete" -> readDelete operands
                   | instruction == "display" -> Just Display
                   | instruction == "close" -> Just Close
+                  | instruction == "rddir" -> readRdDir operands
+                  | instruction == "edit" -> readEdit operands
                   | otherwise -> Nothing
 
 readAdd :: [String] -> Maybe ValidCommand
@@ -40,6 +44,14 @@ readAdd operands| length operands < 3 = Nothing
 readDelete :: [String] -> Maybe ValidCommand
 readDelete operands | null operands = Nothing 
                     | otherwise = let name = head operands in Just (Delete name)
+
+readRdDir :: [String] -> Maybe ValidCommand
+readRdDir operands | length operands == 1 = let path = head operands in Just (RdDir path)
+                   | otherwise  = Nothing 
+
+readEdit :: [String] -> Maybe ValidCommand
+readEdit operands | length operands == 1 = let name = head operands in Just (Edit name) 
+                  | otherwise = Nothing 
 
 type FPath = String
 data ArticleData = Ad {
