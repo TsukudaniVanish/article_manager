@@ -71,8 +71,14 @@ executeCommand (Lib.Add name articlePath readmePath tags) b = do let articleData
                                                                      database =  Lib.addDatabase name articleData b
                                                                  return (True, Lib.Command, database)
 
-executeCommand Lib.Display b = do putStr $ Lib.displayDatabase b
-                                  return (True, Lib.Command, b)
+executeCommand (Lib.Display operands) b = do 
+    if null operands then 
+        putStr $ Lib.displayDatabase b
+    else do
+        let name = head operands 
+            ad = Lib.getFromDatabase name b
+        putStrLn $ Lib.showArticleData ad 
+    return (True, Lib.Command, b)
 
 executeCommand Lib.Close b =  return (True, Lib.Quit, b)
 
@@ -80,28 +86,39 @@ executeCommand (Lib.Delete name) b = do
     let database = Lib.deleteDatabase name b
     return (True, Lib.Command, database)
 
-executeCommand (Lib.RdDir path) b = do 
-    contents <- getDirectoryContents path
-    putStr  "if you need path then put bellow(tags are added to each read articles)\n"
-    tags <- words <$> getLine 
-    let eggOfAds= flip map contents \name ->
-            let 
-                article = path ++ "/" ++ name ++ "/article.pdf"
-                readme = path ++ "/" ++ name ++ "/readme.md"
-            in
-                (name, article, readme)
-        database = flip fix (b, eggOfAds) \loop (b', eggs) ->
-            if null eggs then 
-                b' 
-            else 
-                let
-                    (name, article, readme) = head eggs 
-                    eggs' = tail eggs
-                    ad = Lib.mkData article readme tags
-                    b = Lib.addDatabase name ad b' 
-                in  loop (b, eggs')
-    
-    return (True, Lib.Command, database)
+executeCommand (Lib.RdDir path options) b = do 
+    contents <- filter (\s -> s /= "." && s /= "..") <$> getDirectoryContents path
+    putStr  "if you need some tags then put bellow(tags are added to each read articles)\n"
+    tags <- words <$> getLine
+    if "-one" `elem` options then do
+        let article = path ++ "/" ++ head contents
+            readme = path ++ "/" ++ head (tail contents)
+            ad = Lib.mkData article readme tags
+        putStrLn "article name?"
+        name <- getLine
+        let b' = Lib.addDatabase name ad b
+        return (True, Lib.Command, b')
+    else do 
+
+        let eggOfAds= 
+                flip map contents \name ->
+                let 
+                    article = path ++ "/" ++ name ++ "/article.pdf"
+                    readme = path ++ "/" ++ name ++ "/readme.md"
+                in
+                    (name, article, readme)
+            database = flip fix (b, eggOfAds) \loop (b', eggs) ->
+                if null eggs then 
+                    b' 
+                else 
+                    let
+                        (name, article, readme) = head eggs 
+                        eggs' = tail eggs
+                        ad = Lib.mkData article readme tags
+                        b = Lib.addDatabase name ad b' 
+                    in  loop (b, eggs')
+        
+        return (True, Lib.Command, database)
 
 executeCommand (Lib.Edit name) b = do
     let ad = Lib.getFromDatabase name b
@@ -114,3 +131,7 @@ executeCommand (Lib.Edit name) b = do
 initDatabase :: String -> IO Lib.Database
 initDatabase file| null file = return Lib.emptyDatabase
                  | otherwise = return $ Lib.parseContainerFile file 
+
+-- /mnt/c/users/tukud/desktop/intel_x8464
+-- /mnt/c/users/tukud/desktop/linux_abi 
+-- /mnt/c/users/tukud/desktop/haskell2010

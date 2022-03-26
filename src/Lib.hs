@@ -7,7 +7,7 @@ import qualified Data.HashMap as Map
 import Data.Maybe
 
 data UImode = Init | Command | Quit
-data ValidCommand = Add String FilePath FilePath [String] | Delete String | Display | Close | RdDir String | Edit String
+data ValidCommand = Add String FilePath FilePath [String] | Delete String | Display [String] | Close | RdDir String [String] | Edit String
     deriving (Eq, Show,Read)
 
 -- containerFile format = (line ++ [NewLineChar])*
@@ -28,7 +28,7 @@ parseCommand s = let tokens = words s in
             operands = tail tokens
             in if | instruction == "add" -> readAdd operands
                   | instruction == "delete" -> readDelete operands
-                  | instruction == "display" -> Just Display
+                  | instruction == "display" -> Just (Display operands)
                   | instruction == "close" -> Just Close
                   | instruction == "rddir" -> readRdDir operands
                   | instruction == "edit" -> readEdit operands
@@ -46,8 +46,9 @@ readDelete operands | null operands = Nothing
                     | otherwise = let name = head operands in Just (Delete name)
 
 readRdDir :: [String] -> Maybe ValidCommand
-readRdDir operands | length operands == 1 = let path = head operands in Just (RdDir path)
-                   | otherwise  = Nothing 
+readRdDir operands | length operands == 1 = let path = head operands in Just (RdDir path [])
+                   | null operands = Nothing 
+                   | otherwise  = Just (RdDir (head operands) (tail operands))
 
 readEdit :: [String] -> Maybe ValidCommand
 readEdit operands | length operands == 1 = let name = head operands in Just (Edit name) 
