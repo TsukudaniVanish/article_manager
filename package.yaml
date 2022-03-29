@@ -24,6 +24,9 @@ dependencies:
 - hashmap
 - directory
 - process
+- megaparsec 
+- hspec 
+- hspec-megaparsec
 
 library:
   source-dirs: src

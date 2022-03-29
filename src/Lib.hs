@@ -7,7 +7,19 @@ import qualified Data.HashMap as Map
 import Data.Maybe
 
 data UImode = Init | Command | Quit
-data ValidCommand = Add String FilePath FilePath [String] | Delete String | Display [String] | Close | RdDir String [String] | Edit String
+
+data ValidOption 
+    = OneDirectory
+    deriving (Show, Eq, Read) 
+
+data ValidCommand  
+    = Add String FilePath FilePath [String] -- name filepath readme-filepath tags
+    | Delete String -- name 
+    | Display [String] -- [] -> display all else display article-data connected with names in list 
+    | Close 
+    -- | RdDir String [String]
+    | RdDir [ValidOption] String  -- dir-path options
+    | Edit String -- name 
     deriving (Eq, Show,Read)
 
 -- containerFile format = (line ++ [NewLineChar])*
@@ -18,7 +30,9 @@ containerFileSplitter :: Char
 containerFileSplitter = ',' 
 
 
--- if you want to add command change here 
+{- 
+    this is old version of parsers
+
 parseCommand :: String -> Maybe ValidCommand
 parseCommand s = let tokens = words s in 
     if null tokens then 
@@ -53,7 +67,7 @@ readRdDir operands | length operands == 1 = let path = head operands in Just (Rd
 readEdit :: [String] -> Maybe ValidCommand
 readEdit operands | length operands == 1 = let name = head operands in Just (Edit name) 
                   | otherwise = Nothing 
-
+-}
 type FPath = String
 data ArticleData = Ad {
     filePath:: String,

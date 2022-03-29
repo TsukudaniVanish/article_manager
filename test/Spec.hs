@@ -1,3 +1,7 @@
 import SrcTest(testAll)
+import TestForParser(testCP)
+
 main :: IO ()
-main = testAll
+main = do 
+    testAll
+    testCP
