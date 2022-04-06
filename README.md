@@ -1,4 +1,5 @@
 # articleExplore
+[![Haskell CI](https://github.com/TsukudaniVanish/article_manager/actions/workflows/haskell.yml/badge.svg)](https://github.com/TsukudaniVanish/article_manager/actions/workflows/haskell.yml)
 
 this is article management cui app.
 
