@@ -20,6 +20,7 @@ data ValidCommand
     -- | RdDir String [String]
     | RdDir [ValidOption] String  -- dir-path options
     | Edit String -- name 
+    | Help -- todo
     deriving (Eq, Show,Read)
 
 -- containerFile format = (line ++ [NewLineChar])*

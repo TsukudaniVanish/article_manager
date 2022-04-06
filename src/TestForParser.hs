@@ -24,5 +24,7 @@ testCP = hspec $
         it "editcommand" $
             parse commandParser "" "edit name" `shouldParse` Edit "name"
         it "closecommand" $
-            parse commandParser "" "close" `shouldParse` Close  
+            parse commandParser "" "close" `shouldParse` Close
+        it "helpcommand" $ 
+            parse commandParser "" "help " `shouldParse` Help 
         

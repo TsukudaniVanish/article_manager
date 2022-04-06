@@ -21,6 +21,7 @@ type Parser a = Parsec Void String a
     --  Close 
     --  RdDir String [String] -- dir-path options
     --  Edit String -- name
+    -- Help
 
 skipSpace :: Parser () 
 skipSpace = L.space 
@@ -111,6 +112,11 @@ editcommand = label "edit name" $ do
     lexeme $ string "edit" 
     Edit <$> readName
 
+helpcommand :: Parser ValidCommand 
+helpcommand = label "help" $ do 
+    lexeme $ string "help"
+    pure Help 
+
 commandParser :: Parser ValidCommand 
 commandParser = 
     let mainPart = 
@@ -121,6 +127,7 @@ commandParser =
                 , closecommand
                 , rddircommand
                 , editcommand
+                , helpcommand
                 ]
     in between skipSpace eof mainPart
 

@@ -86,6 +86,9 @@ interactWithUser b = do mc <- registerCommand
 registerCommand :: IO (Maybe Lib.ValidCommand)
 registerCommand = Lib.parseCommand <$> getLine
 -}
+
+
+-- main logic for command
 executeCommand :: Lib.ValidCommand -> Lib.Database -> IO (Bool, Lib.UImode, Lib.Database)
 executeCommand (Lib.Add name articlePath readmePath tags) b = do let articleData = Lib.mkData articlePath readmePath tags
                                                                      database =  Lib.addDatabase name articleData b
@@ -148,10 +151,14 @@ executeCommand (Lib.Edit name) b = do
     putStrLn "edit finish!"
     return (True, Lib.Command, b)
 
+executeCommand Lib.Help b = do 
+    -- todo
+    return (True, Lib.Command , b)
+
+
+
+
+
 initDatabase :: String -> IO Lib.Database
 initDatabase file| null file = return Lib.emptyDatabase
                  | otherwise = return $ Lib.parseContainerFile file 
-
--- /mnt/c/users/tukud/desktop/intel_x8464/
--- /mnt/c/users/tukud/desktop/linux_abi/ 
--- /mnt/c/users/tukud/desktop/haskell2010/
