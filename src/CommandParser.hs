@@ -131,5 +131,5 @@ commandParser =
                 ]
     in between skipSpace eof mainPart
 
-parseCommand' :: String -> Either (ParseErrorBundle String Void) ValidCommand 
-parseCommand' = parse commandParser "" -- <- "" is name of source file
+parseCommand :: String -> Either (ParseErrorBundle String Void) ValidCommand 
+parseCommand = parse commandParser "" -- <- "" is name of source file

@@ -1,4 +1,5 @@
 {-#LANGUAGE BlockArguments #-}
+{-#LANGUAGE OverloadedStrings #-}
 module Main where
 
 import qualified Lib
@@ -9,7 +10,11 @@ import Data.Function
 import System.Process 
 import Text.Megaparsec
 import Text.Megaparsec.Char
-import qualified CommandParser as CP 
+import qualified CommandParser as CP
+import qualified SQLHandler as DB
+import qualified System.IO.Streams as ST
+import qualified Data.Text as T
+
 
 containerFileName :: String 
 containerFileName = "data.txt"
@@ -17,8 +22,83 @@ containerFileName = "data.txt"
 containerFilePath :: String -> String 
 containerFilePath dir = dir ++ "/" ++ containerFileName
 
-main = interfaceInit
+main = interfaceInit'
 
+interfaceInit' :: IO () 
+interfaceInit' = do 
+    putStrLn "Hello!"
+    conn <- DB.connectDB DB.myConnectInfo
+    putStrLn "Connect to your database!"
+    interface' Lib.Command conn
+
+
+interface' :: Lib.UImode -> DB.DB -> IO () 
+interface' Lib.Init _ = return () -- DO NOT USE 
+interface' Lib.Command  db = do 
+    putStrLn "type Command below!(If you need help type 'help')"
+    command <- CP.parseCommand <$> getLine
+    case command of
+        Right cmd -> do
+            (success, state) <- executeCommand' cmd db
+            if success then 
+                interface' state db
+            else do
+                putStrLn "ERROR: Command Failed"
+                putStrLn "If you need help type 'help'"
+                interface' state db
+        Left e -> do 
+            putStr $ errorBundlePretty e
+            putStrLn "If you need help type 'help'"
+            interface' Lib.Command db
+interface' Lib.Quit db = do 
+    putStrLn "Closing your database"
+    DB.closeDB db
+    putStr "Bye"
+    return () 
+
+
+executeCommand' :: Lib.ValidCommand -> DB.DB -> IO (Bool, Lib.UImode )
+executeCommand' cmd db = case cmd of 
+    Lib.Add name ap rp tags -> do
+        stmt <- DB.setStmt db "insert into article_info values (0, ?, ?, ?)"
+        let values = map (DB.string2DB . T.pack) [ap, rp, name]
+        DB.sendStmt db stmt values 
+        putStrLn "add to database!"
+        return (True, Lib.Command)
+    Lib.Close -> return (True, Lib.Quit)
+    Lib.Display args -> case args of 
+        [] -> do 
+            (defs, info) <- DB.queryRaw db "select * from article_info"
+            flip fix info \loop stream -> 
+                ST.read stream >>= \x -> case x of 
+                    Just datas ->  do 
+                        putStrLn $ unwords $ map (T.unpack . DB.fromVal) $ tail  datas
+                        loop stream
+                    Nothing -> return (True, Lib.Command)
+        (name:empty) -> do
+            stmt <- DB.setStmt db "select * from article_info where name = ?"
+            (defs, info) <- DB.sendQuery db stmt [DB.string2DB $ T.pack name]
+            flip fix info \loop stream -> 
+                ST.read stream >>= \x -> case x of 
+                    Just datas ->  do 
+                        putStrLn $ unwords $ map (T.unpack . DB.fromVal) $ tail  datas
+                        loop stream
+                    Nothing -> return (True, Lib.Command)
+    Lib.Edit name -> do 
+        stmt <- DB.setStmt db "select readme_path from article_info where name = ?"
+        (_, info) <- DB.sendQuery db stmt [DB.string2DB $ T.pack name]
+        ST.read info >>= \d -> case d of 
+            Just datas ->  do 
+                (_, _, _, ph) <- createProcess (proc "/usr/bin/nvim" $ map (T.unpack . DB.fromVal) datas)
+                exit <- waitForProcess ph
+                putStrLn "edit finish!"
+                return (True, Lib.Command)
+            Nothing -> do 
+                putStrLn "can't find such article"
+                return (True, Lib.Command)
+    
+-- old ones ---------------------------------------
+-- old interface 
 interfaceInit :: IO ()
 interfaceInit = do putStrLn "Hello!"
                    cur <- getCurrentDirectory 
@@ -30,6 +110,7 @@ interfaceInit = do putStrLn "Hello!"
                    else 
                        interface Lib.Init Lib.emptyDatabase
 
+-- old interface 
 interface :: Lib.UImode -> Lib.Database -> IO ()
 interface Lib.Init b = do interface Lib.Command b
 
@@ -47,9 +128,9 @@ interface Lib.Quit b = do
     return ()
 
 
-interactWithUser' :: Lib.Database -> IO () 
+interactWithUser' :: Lib.Database -> IO ()
 interactWithUser' b = do 
-    mc <- CP.parseCommand' <$> getLine
+    mc <- CP.parseCommand <$> getLine
     case mc of 
         Right cmd -> do 
             (success, state, database) <- executeCommand cmd b
@@ -87,7 +168,7 @@ registerCommand :: IO (Maybe Lib.ValidCommand)
 registerCommand = Lib.parseCommand <$> getLine
 -}
 
-
+-- old version executeCommand
 -- main logic for command
 executeCommand :: Lib.ValidCommand -> Lib.Database -> IO (Bool, Lib.UImode, Lib.Database)
 executeCommand (Lib.Add name articlePath readmePath tags) b = do let articleData = Lib.mkData articlePath readmePath tags
@@ -154,8 +235,6 @@ executeCommand (Lib.Edit name) b = do
 executeCommand Lib.Help b = do 
     -- todo
     return (True, Lib.Command , b)
-
-
 
 
 

@@ -1,5 +1,5 @@
 module SrcTest where
-
+    
 import Lib
 import CommandParser as CP
 import Text.Megaparsec(parseTest)
