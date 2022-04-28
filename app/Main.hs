@@ -96,6 +96,49 @@ executeCommand' cmd db = case cmd of
             Nothing -> do 
                 putStrLn "can't find such article"
                 return (True, Lib.Command)
+    Lib.RdDir options path -> do 
+        contents <- filter (\s -> s /= "." && s /= "..") <$> getDirectoryContents path
+        putStr  "if you need some tags then put bellow(tags are added to each read articles)\n"
+        tags <- words <$> getLine
+        if Lib.OneDirectory  `elem` options then do
+            let (h,t) = (head contents, head (tail contents))
+                (article, readme) = if last h == 'f' then (path ++ h, path ++ t) else (path ++ t, path ++ h) 
+                ad = Lib.mkData article readme tags
+            putStrLn "article name?"
+            name <- getLine
+            stmt <- DB.setStmt db "insert into article_info values (0, ?, ?, ?)"
+            let args = map (DB.string2DB . T.pack) [article, readme, name] 
+            DB.sendStmt db stmt args 
+            return (True, Lib.Command)
+        else do 
+                let eggOfAds= flip map contents \name ->
+                        let 
+                            article = path  ++ name ++ "/article.pdf"
+                            readme = path ++ name ++ "/readme.md"
+                        in
+                            (name, article, readme)
+                flip fix eggOfAds \loop list ->
+                    if null list then 
+                        return (True, Lib.Command)
+                    else do 
+                        stmt <- DB.setStmt db "insert into article_info values (0, ?, ?, ?)"
+                        let (name, article, readme) = head list 
+                            args = map (DB.string2DB . T.pack) [article, readme, name] 
+                        DB.sendStmt db stmt args
+                        loop (tail list)
+    Lib.Help -> do 
+        putStrLn "Help will be implemented. Please wait"
+        return (True, Lib.Command)
+    Lib.Delete _ -> do 
+        putStrLn "Delete will be implemented. Please wait"
+        return (True, Lib.Command)
+
+                
+
+
+
+        
+        
     
 -- old ones ---------------------------------------
 -- old interface 
