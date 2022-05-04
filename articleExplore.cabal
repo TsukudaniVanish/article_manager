@@ -27,6 +27,7 @@ library
   exposed-modules:
       CommandParser
       Lib
+      Myget
       SQLHandler
       SrcTest
       TestForParser

@@ -14,6 +14,7 @@ import qualified CommandParser as CP
 import qualified SQLHandler as DB
 import qualified System.IO.Streams as ST
 import qualified Data.Text as T
+import qualified Myget as MG  
 
 
 containerFileName :: String 
@@ -36,7 +37,7 @@ interface' :: Lib.UImode -> DB.DB -> IO ()
 interface' Lib.Init _ = return () -- DO NOT USE 
 interface' Lib.Command  db = do 
     putStrLn "type Command below!(If you need help type 'help')"
-    command <- CP.parseCommand <$> getLine
+    command <- CP.parseCommand <$> MG.getLine
     case command of
         Right cmd -> do
             (success, state) <- executeCommand' cmd db
@@ -99,13 +100,13 @@ executeCommand' cmd db = case cmd of
     Lib.RdDir options path -> do 
         contents <- filter (\s -> s /= "." && s /= "..") <$> getDirectoryContents path
         putStr  "if you need some tags then put bellow(tags are added to each read articles)\n"
-        tags <- words <$> getLine
+        tags <- words <$> MG.getLine
         if Lib.OneDirectory  `elem` options then do
             let (h,t) = (head contents, head (tail contents))
                 (article, readme) = if last h == 'f' then (path ++ h, path ++ t) else (path ++ t, path ++ h) 
                 ad = Lib.mkData article readme tags
             putStrLn "article name?"
-            name <- getLine
+            name <- MG.getLine
             stmt <- DB.setStmt db "insert into article_info values (0, ?, ?, ?)"
             let args = map (DB.string2DB . T.pack) [article, readme, name] 
             DB.sendStmt db stmt args 
@@ -173,7 +174,7 @@ interface Lib.Quit b = do
 
 interactWithUser' :: Lib.Database -> IO ()
 interactWithUser' b = do 
-    mc <- CP.parseCommand <$> getLine
+    mc <- CP.parseCommand <$> MG.getLine
     case mc of 
         Right cmd -> do 
             (success, state, database) <- executeCommand cmd b
@@ -208,7 +209,7 @@ interactWithUser b = do mc <- registerCommand
                                     interface state b
 
 registerCommand :: IO (Maybe Lib.ValidCommand)
-registerCommand = Lib.parseCommand <$> getLine
+registerCommand = Lib.parseCommand <$> MG.getLine
 -}
 
 -- old version executeCommand
@@ -236,13 +237,13 @@ executeCommand (Lib.Delete name) b = do
 executeCommand (Lib.RdDir options path) b = do 
     contents <- filter (\s -> s /= "." && s /= "..") <$> getDirectoryContents path
     putStr  "if you need some tags then put bellow(tags are added to each read articles)\n"
-    tags <- words <$> getLine
+    tags <- words <$> MG.getLine
     if Lib.OneDirectory  `elem` options then do
         let article = path ++ "/" ++ head contents
             readme = path ++ "/" ++ head (tail contents)
             ad = Lib.mkData article readme tags
         putStrLn "article name?"
-        name <- getLine
+        name <- MG.getLine
         let b' = Lib.addDatabase name ad b
         return (True, Lib.Command, b')
     else do 
