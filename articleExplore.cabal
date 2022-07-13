@@ -37,7 +37,9 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , bytestring
     , directory
+    , dotenv
     , hashmap
     , hspec
     , hspec-megaparsec
@@ -46,6 +48,7 @@ library
     , mysql-haskell
     , process
     , text
+    , utf8-string
   default-language: Haskell2010
 
 executable articleExplore-exe
@@ -58,7 +61,9 @@ executable articleExplore-exe
   build-depends:
       articleExplore
     , base >=4.7 && <5
+    , bytestring
     , directory
+    , dotenv
     , hashmap
     , hspec
     , hspec-megaparsec
@@ -67,6 +72,7 @@ executable articleExplore-exe
     , mysql-haskell
     , process
     , text
+    , utf8-string
   default-language: Haskell2010
 
 test-suite articleExplore-test
@@ -80,7 +86,9 @@ test-suite articleExplore-test
   build-depends:
       articleExplore
     , base >=4.7 && <5
+    , bytestring
     , directory
+    , dotenv
     , hashmap
     , hspec
     , hspec-megaparsec
@@ -89,4 +97,5 @@ test-suite articleExplore-test
     , mysql-haskell
     , process
     , text
+    , utf8-string
   default-language: Haskell2010

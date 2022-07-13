@@ -14,7 +14,9 @@ import qualified CommandParser as CP
 import qualified SQLHandler as DB
 import qualified System.IO.Streams as ST
 import qualified Data.Text as T
-import qualified Myget as MG  
+import qualified Myget as MG
+import qualified Configuration.Dotenv as ENV
+import Data.List (find)
 
 
 containerFileName :: String 
@@ -28,7 +30,12 @@ main = interfaceInit'
 interfaceInit' :: IO () 
 interfaceInit' = do 
     putStrLn "Hello!"
-    conn <- DB.connectDB DB.myConnectInfo
+    putStrLn "Connecting to your mysql DB"
+    env <- ENV.loadFile $ ENV.Config ["./.env"] ["./.env_example"] True
+    let user = snd $ fromJust $ find (\t -> fst t == "MYSQL_USER") env
+        pass = snd $ fromJust $ find (\t -> fst t == "MYSQL_PASSWORD") env
+        db = snd $ fromJust $ find (\t -> fst t == "MYSQL_DB") env
+    conn <- DB.connectDB $ DB.myConnectInfo user pass db 
     putStrLn "Connect to your database!"
     interface' Lib.Command conn
 

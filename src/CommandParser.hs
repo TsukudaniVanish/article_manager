@@ -7,7 +7,7 @@
 module CommandParser where
 
 import Data.Void(Void)
-import Text.Megaparsec 
+import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -74,6 +74,7 @@ readoptions = label "options" $ do
     n <- const 1 <$> string "one"
     case n of 
         1 -> pure OneDirectory
+        _ -> undefined
 
 
 -- main logics for command parse

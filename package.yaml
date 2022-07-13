@@ -30,6 +30,9 @@ dependencies:
 - mysql-haskell
 - io-streams
 - text 
+- dotenv
+- bytestring
+- utf8-string
 
 library:
   source-dirs: src
