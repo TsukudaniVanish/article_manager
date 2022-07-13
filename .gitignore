@@ -5,3 +5,4 @@ dist-newstyle/
 testForApp/
 *.txt
 *~
+.env
